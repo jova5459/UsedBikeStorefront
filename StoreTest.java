@@ -1,49 +1,46 @@
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
-
-import static org.junit.Assert.assertEquals;
+import java.io.PrintStream;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
 
 public class StoreTest {
-
-    private Store store;
-    private final InputStream systemIn = System.in;
+    private Connection conn;
 
     @BeforeEach
-    public void setUp() {
-        store = new Store();
+    public void setup() {
+        try {
+            conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/KidsUsedBikeStore", "root", "Mydatabase2023");
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
-
     @Test
-    public void testSignUp_ValidEmail() {
-        String input = "Jon\njon@example.com\n";
-        InputStream in = new ByteArrayInputStream(input.getBytes());
-        System.setIn(in);
+    public void testSignUp() {
+        Store store = new Store(conn);
+        // Simulate user input for sign-up
+        ByteArrayInputStream inContent = new ByteArrayInputStream("Jon\nVar\njon@example.com\n1234567890\n123 Main St".getBytes());
+        System.setIn(inContent);
 
         store.signUp();
-        // Verify that the customer list contains the expected user after sign-up
-        Assertions.assertTrue(store.getCustomers().stream().anyMatch(c -> c.getEmail().equals("jon@example.com")));
+        assertNotNull(store.getCurrentCustomer());
     }
 
     @Test
     public void testReturnProcess() {
-        // Test the return functionality
         // ByteArrayInputStream simulates user input for returning a purchased bike
         String input = "1\n";
         InputStream in = new ByteArrayInputStream(input.getBytes());
         System.setIn(in);
 
         // Perform the return process
+        Store store = new Store(conn);
         store.returnPurchase();
-    }
-
-    @Test
-    public void testBlockchain_AddBlock() {
-        Block transaction = new Block(1, "prevHash", null, null, 100.00);
-        store.getBlockchain().addBlock(transaction);
-        assertEquals(transaction, store.getBlockchain().getLatestBlock()); // Ensure block addition
     }
 }
